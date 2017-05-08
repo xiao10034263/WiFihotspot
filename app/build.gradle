@@ -7,13 +7,35 @@ android {
     defaultConfig {
         applicationId "com.xiaoniu.wifihotspotdemo"
         minSdkVersion 15
-        targetSdkVersion 23
+        targetSdkVersion 22
         versionCode 1
         versionName "1.0"
     }
-    buildTypes {
+    signingConfigs {
+        debug {
+            storeFile file(STORE_FILE)//签名文件路径
+            storePassword STORE_PWD
+            keyAlias KEY_ALIAS
+            keyPassword KEY_PWD  //签名密码
+        }
         release {
+            storeFile file(STORE_FILE)//签名文件路径
+            storePassword STORE_PWD
+            keyAlias KEY_ALIAS
+            keyPassword KEY_PWD  //签名密码
+        }
+    }
+    buildTypes {
+        debug {
+            signingConfig signingConfigs.debug
+        }
+        release {
+            //是否混淆
             minifyEnabled false
+            //是否移除无用资源
+            zipAlignEnabled false
+            signingConfig signingConfigs.release
+            //混淆的配置文件
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
@@ -23,4 +45,5 @@ dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     testCompile 'junit:junit:4.12'
     compile 'com.android.support:appcompat-v7:23.4.0'
+    compile 'com.lovedise:permissiongen:0.0.6'
 }

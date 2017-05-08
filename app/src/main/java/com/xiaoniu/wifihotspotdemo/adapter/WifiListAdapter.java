@@ -35,7 +35,11 @@ public class WifiListAdapter extends ArrayAdapter<ScanResult> {
         TextView signl = (TextView) convertView.findViewById(R.id.wifi_signal);
 
         ScanResult scanResult = getItem(position);
-        name.setText(scanResult.SSID);
+        if(is24GHz(scanResult.frequency)){
+            name.setText(scanResult.SSID+"-频率2.4Hz");
+        }else if(is5GHz(scanResult.frequency)){
+            name.setText(scanResult.SSID+"-频率"+"5Hz");
+        }
 
         int level = scanResult.level;
         if (level <= 0 && level >= -50) {
@@ -52,5 +56,21 @@ public class WifiListAdapter extends ArrayAdapter<ScanResult> {
 
         return convertView;
     }
+    /**
+     * 判断wifi是否为2.4G
+     * @param freq
+     * @return
+     */
+    public static boolean is24GHz(int freq) {
+        return freq > 2400 && freq < 2500;
+    }
 
+    /**
+     * 判断wifi是否为5G
+     * @param freq
+     * @return
+     */
+    public static boolean is5GHz(int freq) {
+        return freq > 4900 && freq < 5900;
+    }
 }

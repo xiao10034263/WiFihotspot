@@ -1,6 +1,7 @@
 package com.xiaoniu.wifihotspotdemo;
 
 import android.Manifest;
+import android.annotation.TargetApi;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -9,6 +10,7 @@ import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.Uri;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiInfo;
@@ -17,6 +19,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -97,25 +100,47 @@ public  class MainActivity extends AppCompatActivity implements View.OnClickList
         setContentView(R.layout.activity_main);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {//如果 API level 是大于等于 23(Android 6.0) 时
             //判断是否具有权限
-            if (ContextCompat.checkSelfPermission(this,
-                    Manifest.permission.WRITE_SETTINGS) != PackageManager.PERMISSION_GRANTED) {
-                //请求权限
-                ActivityCompat.requestPermissions(this,new String[]{
-                        Manifest.permission.ACCESS_FINE_LOCATION,
-                        Manifest.permission.ACCESS_COARSE_LOCATION,
-                        Manifest.permission.ACCESS_WIFI_STATE,
-                        Manifest.permission.WRITE_SETTINGS,
-                },REQUEST_CODE_ACCESS_COARSE_LOCATION);
-            }
+//            if (ContextCompat.checkSelfPermission(this,
+//                    Manifest.permission.WRITE_SETTINGS) != PackageManager.PERMISSION_GRANTED) {
+//                //请求权限
+//                ActivityCompat.requestPermissions(this,new String[]{
+//                        Manifest.permission.ACCESS_FINE_LOCATION,
+//                        Manifest.permission.ACCESS_COARSE_LOCATION,
+//                        Manifest.permission.ACCESS_WIFI_STATE,
+//                        Manifest.permission.WRITE_SETTINGS,
+//                },REQUEST_CODE_ACCESS_COARSE_LOCATION);
+//            }
+            checkPermission();
         }
-        initVIew();
+        initView();
+        initWifi();
+
+    }
+    //6.0以上才能调用
+    @TargetApi(23)
+    private void checkPermission(){
+        if(!Settings.System.canWrite(this)){
+            Intent intent = new Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS,
+                    Uri.parse("package:" + getPackageName()));
+            startActivityForResult(intent, REQUEST_CODE_ACCESS_COARSE_LOCATION);
+            //请求权限
+//            ActivityCompat.requestPermissions(this,new String[]{
+//                    Manifest.permission.ACCESS_FINE_LOCATION,
+//                    Manifest.permission.ACCESS_COARSE_LOCATION,
+//                    Manifest.permission.ACCESS_WIFI_STATE,
+//                    Manifest.permission.WRITE_SETTINGS,
+//            },REQUEST_CODE_ACCESS_COARSE_LOCATION);
+        }
+
+
+    }
+    private void initWifi(){
         initBroadcastReceiver();
         wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         listenerThread = new ListenerThread(PORT, handler);
-//        listenerThread.start();
+//        new Thread(listenerThread).start();
     }
-
-    private void initVIew() {
+    private void initView() {
         listView = (ListView) findViewById(R.id.listView);
         btn_create_hostspot = (Button) findViewById(R.id.btn_create_hostspot);
         btn_close_hostspot = (Button) findViewById(R.id.btn_close_hostspot);
@@ -500,7 +525,7 @@ private boolean flag = false;
         switch (requestCode){
             case REQUEST_CODE_ACCESS_COARSE_LOCATION:
                 if (grantResults.length>0&&grantResults[0] == PackageManager.PERMISSION_GRANTED){
-//                    initWifi();
+                    initWifi();
                     Toast.makeText(MainActivity.this, "权限获取成功", Toast.LENGTH_SHORT).show();
                 }else{
 // 不允许

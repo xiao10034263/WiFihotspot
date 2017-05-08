@@ -43,7 +43,7 @@ public class ListenerThread extends Thread{
                 Message message = Message.obtain();
                 message.what = MainActivity.DEVICE_CONNECTING;
                 handler.sendMessage(message);
-            } catch (IOException e) {
+            } catch (Exception e) {
                 Log.w("AAA","error:"+e.getMessage());
                 e.printStackTrace();
             }

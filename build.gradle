@@ -11,7 +11,12 @@ buildscript {
         // in the individual module build.gradle files
     }
 }
-
+subprojects{
+    apply from:"${project.rootDir}/common_config.gradle"
+    dependencies{
+        testCompile 'junit:junit:4.12'
+    }
+}
 allprojects {
     repositories {
         jcenter()

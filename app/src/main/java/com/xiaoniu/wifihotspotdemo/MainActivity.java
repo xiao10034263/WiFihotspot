@@ -1,7 +1,6 @@
 package com.xiaoniu.wifihotspotdemo;
 
 import android.Manifest;
-import android.annotation.TargetApi;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -71,74 +70,58 @@ public  class MainActivity extends AppCompatActivity implements View.OnClickList
      * 端口号
      */
     private static final int PORT = 54321;
-
     private static final int WIFICIPHER_NOPASS = 1;
     private static final int WIFICIPHER_WEP = 2;
     private static final int WIFICIPHER_WPA = 3;
-
     public static final int DEVICE_CONNECTING = 1;//有设备正在连接热点
     public static final int DEVICE_CONNECTED = 2;//有设备连上热点
     public static final int SEND_MSG_SUCCSEE = 3;//发送消息成功
     public static final int SEND_MSG_ERROR = 4;//发送消息失败
     public static final int GET_MSG = 6;//获取新消息
-
-
     /**
      * 连接线程
      */
     private ConnectThread connectThread;
-
     /**
      * 监听线程
      */
     private ListenerThread listenerThread;
 
-    private final int REQUEST_CODE_ACCESS_COARSE_LOCATION = 1;
+    private final int ACTION_MANAGE_WRITE_SETTINGS = 1;
+    private final int REQUEST_CODE_ACCESS_COARSE_LOCATION = 2;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {//如果 API level 是大于等于 23(Android 6.0) 时
-            //判断是否具有权限
-//            if (ContextCompat.checkSelfPermission(this,
-//                    Manifest.permission.WRITE_SETTINGS) != PackageManager.PERMISSION_GRANTED) {
-//                //请求权限
-//                ActivityCompat.requestPermissions(this,new String[]{
-//                        Manifest.permission.ACCESS_FINE_LOCATION,
-//                        Manifest.permission.ACCESS_COARSE_LOCATION,
-//                        Manifest.permission.ACCESS_WIFI_STATE,
-//                        Manifest.permission.WRITE_SETTINGS,
-//                },REQUEST_CODE_ACCESS_COARSE_LOCATION);
-//            }
-            checkPermission();
+            if(!Settings.System.canWrite(this)){
+                Intent intent = new Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS,
+                        Uri.parse("package:" + getPackageName()));
+                startActivityForResult(intent, ACTION_MANAGE_WRITE_SETTINGS);
+            }
         }
         initView();
         initWifi();
-
-    }
-    //6.0以上才能调用
-    @TargetApi(23)
-    private void checkPermission(){
-        if(!Settings.System.canWrite(this)){
-            Intent intent = new Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS,
-                    Uri.parse("package:" + getPackageName()));
-            startActivityForResult(intent, REQUEST_CODE_ACCESS_COARSE_LOCATION);
-            //请求权限
-//            ActivityCompat.requestPermissions(this,new String[]{
-//                    Manifest.permission.ACCESS_FINE_LOCATION,
-//                    Manifest.permission.ACCESS_COARSE_LOCATION,
-//                    Manifest.permission.ACCESS_WIFI_STATE,
-//                    Manifest.permission.WRITE_SETTINGS,
-//            },REQUEST_CODE_ACCESS_COARSE_LOCATION);
-        }
-
-
     }
     private void initWifi(){
         initBroadcastReceiver();
         wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         listenerThread = new ListenerThread(PORT, handler);
 //        new Thread(listenerThread).start();
+    }
+
+    private void checkPermission(){
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
+            //判断是否具有权限
+            if (ContextCompat.checkSelfPermission(this,
+                    Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                String[] permissions = {Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION};                //请求权限
+                ActivityCompat.requestPermissions(this,permissions,REQUEST_CODE_ACCESS_COARSE_LOCATION);
+            }
+        }else{
+            search();
+        }
+
     }
     private void initView() {
         listView = (ListView) findViewById(R.id.listView);
@@ -236,7 +219,7 @@ private boolean flag = false;
                 }
                 break;
             case R.id.btn_search:
-                search();
+                checkPermission();
                 break;
         }
     }
@@ -334,6 +317,7 @@ private boolean flag = false;
             //开启wifi
             wifiManager.setWifiEnabled(true);
         }
+        Toast.makeText(MainActivity.this, "开始扫描", Toast.LENGTH_SHORT).show();
         wifiManager.startScan();
     }
 
@@ -523,12 +507,14 @@ private boolean flag = false;
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         switch (requestCode){
+            case ACTION_MANAGE_WRITE_SETTINGS:
+                checkPermission();
+                break;
             case REQUEST_CODE_ACCESS_COARSE_LOCATION:
                 if (grantResults.length>0&&grantResults[0] == PackageManager.PERMISSION_GRANTED){
-                    initWifi();
                     Toast.makeText(MainActivity.this, "权限获取成功", Toast.LENGTH_SHORT).show();
+                    search();
                 }else{
-// 不允许
 //                    Toast.makeText(this,getString(R.string.permisstion_deny),Toast.LENGTH_SHORT).show();
                     Toast.makeText(MainActivity.this, "权限获取失败", Toast.LENGTH_SHORT).show();
                 }

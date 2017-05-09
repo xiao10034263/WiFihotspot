@@ -1,7 +1,8 @@
 apply plugin: 'com.android.application'
-
+def config = rootProject.ext.android //配置
+def libarys = rootProject.ext.dependencies //依赖
 android {
-     compileSdkVersion 25
+     compileSdkVersion config.compileSdkVersion
     buildToolsVersion "25.0.2"
 
     defaultConfig {
@@ -43,7 +44,7 @@ android {
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
-    testCompile 'junit:junit:4.12'
+    testCompile libarys.junit
     compile 'com.android.support:appcompat-v7:25.3.0'
     compile 'com.lovedise:permissiongen:0.0.6'
 }

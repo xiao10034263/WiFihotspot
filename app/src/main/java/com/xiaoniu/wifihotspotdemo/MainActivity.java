@@ -113,9 +113,11 @@ public  class MainActivity extends AppCompatActivity implements View.OnClickList
     private void checkPermission(){
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
             //判断是否具有权限
-            if (ContextCompat.checkSelfPermission(this,
-                    Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                String[] permissions = {Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION};                //请求权限
+            String[] permissions = {Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION};                //请求权限
+            // getUngrantedPermissions()：遍历permissions，返回其中未被授予的权限，如果所有权限都被授予，则返回空的数组。
+            String [] unGranted = getUngrantedPermissions(permissions);
+            if (unGranted.length != 0) {
+//                    requestPermissions(unGranted);
                 ActivityCompat.requestPermissions(this,permissions,REQUEST_CODE_ACCESS_COARSE_LOCATION);
             }
         }else{
@@ -123,6 +125,20 @@ public  class MainActivity extends AppCompatActivity implements View.OnClickList
         }
 
     }
+
+    private String [] getUngrantedPermissions(String [] permissions){
+        List<String> list = new ArrayList<>();
+        if (permissions==null||permissions.length<=0)
+            return (String[])list.toArray();
+        for(int i=0;i<permissions.length;i++){
+            if(ContextCompat.checkSelfPermission(this,
+                    permissions[i])!= PackageManager.PERMISSION_GRANTED){
+                list.add(permissions[i]);
+            }
+        }
+        return (String[]) list.toArray();
+    }
+
     private void initView() {
         listView = (ListView) findViewById(R.id.listView);
         btn_create_hostspot = (Button) findViewById(R.id.btn_create_hostspot);
